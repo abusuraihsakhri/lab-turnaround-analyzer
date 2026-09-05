@@ -57,7 +57,19 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "lab-turnaround-analyzer-master-audit-key-2026")).encode("utf-8")
+        resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if not resolved_key:
+            # Generate a random per-session key if none provided.
+            # This ensures each run has a unique signing key, preventing cross-session forgery.
+            resolved_key = os.urandom(32).hex()
+            import warnings
+            warnings.warn(
+                "AUDIT_SECRET_KEY not set. Using a random per-session key. "
+                "Set AUDIT_SECRET_KEY environment variable for persistent audit integrity.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        self.secret_key = resolved_key.encode("utf-8") if isinstance(resolved_key, str) else resolved_key
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
