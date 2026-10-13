@@ -98,7 +98,7 @@ def _safe_path(filepath, must_exist=False):
 
     # Allow paths under cwd or in temp directories (for test outputs)
     temp_dir = pathlib.Path(os.environ.get("TEMP", "/tmp")).resolve()
-    if not (str(resolved).startswith(str(cwd)) or str(resolved).startswith(str(temp_dir))):
+    if not (resolved.is_relative_to(cwd) or resolved.is_relative_to(temp_dir)):
         raise ValueError(
             f"Path traversal blocked: '{filepath}' resolves outside the working directory"
         )
@@ -153,6 +153,11 @@ def build_parser():
     sub=p.add_subparsers(dest="cmd", required=True)
     s=sub.add_parser("single"); s.add_argument("query", nargs="?", default="creatinine"); s.add_argument("--query", dest="q2")
     b=sub.add_parser("batch"); b.add_argument("--input", required=True); b.add_argument("--output", required=True)
+    a=sub.add_parser("analyze", help="Analyze timezone-aware LIS timestamps")
+    a.add_argument("--input", required=True, help="CSV with test, received_at, reported_at")
+    a.add_argument("--threshold-minutes", type=float, default=60)
+    a.add_argument("--output", help="Optional annotated CSV destination")
+    a.add_argument("--report", help="Optional summary JSON destination")
     return p
 
 def main(argv=None):
@@ -160,6 +165,19 @@ def main(argv=None):
     if a.cmd=="single":
         q=getattr(a,"q2",None) or getattr(a,"query")
         print(lookup(q)); return 0
+    if a.cmd=="analyze":
+        from tat_metrics import analyze_csv, annotated_csv
+        with open(a.input, encoding="utf-8-sig", newline="") as source:
+            result = analyze_csv(source.read(), a.threshold_minutes)
+        summary = {k: result[k] for k in ("threshold_minutes", "overall", "by_test")}
+        if a.output:
+            with open(a.output, "w", encoding="utf-8", newline="") as target:
+                target.write(annotated_csv(result))
+        if a.report:
+            with open(a.report, "w", encoding="utf-8") as target:
+                json.dump(summary, target, indent=2)
+        print(json.dumps(summary, indent=2))
+        return 0
     if a.cmd=="batch":
         res=process_csv(a.input, a.output); print(f"Processed {len(res)} -> {a.output}"); return 0
     p.print_help(); return 1
