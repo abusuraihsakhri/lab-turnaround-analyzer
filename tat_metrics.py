@@ -112,7 +112,8 @@ def annotated_csv(result):
               if key not in ("tat_minutes", "breached", "outlier")]
     fields += ["tat_minutes", "breached", "outlier"]
     writer = csv.DictWriter(out, fieldnames=fields, extrasaction="ignore")
-    writer.writeheader()
+    writer.writerow({field: "'" + field if field.lstrip().startswith(
+        ("=", "+", "-", "@", "\t", "\r")) else field for field in fields})
     for record in result["records"]:
         safe = dict(record)
         for field in result["input_columns"]:
