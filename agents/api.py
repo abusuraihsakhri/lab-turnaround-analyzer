@@ -13,8 +13,8 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Lab Turnaround Analyzer API",
-    description="Enterprise Distributed Component Platform (AI Drug Discovery, Structural Biology & Wet-Lab Robotics)",
-    version="3.0.0-ENTERPRISE",
+    description="Laboratory turnaround metrics and preserved legacy agent evaluation API",
+    version="3.1.0",
 )
 
 
@@ -24,7 +24,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "lab-turnaround-analyzer", "domain": "AI Drug Discovery, Structural Biology & Wet-Lab Robotics", "standard": "wwPDB / IUPAC / OpenSMILES / ISAC Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "lab-turnaround-analyzer", "domain": "Laboratory informatics", "standard": "Descriptive laboratory operations metrics", "version": "3.1.0"}
 
 
 @app.get("/metrics")
