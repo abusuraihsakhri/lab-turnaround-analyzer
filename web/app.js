@@ -150,7 +150,7 @@
   function annotatedCSV(result) {
     const fields = result.input_columns.filter(x => !["tat_minutes", "breached", "outlier"].includes(x))
       .concat(["tat_minutes", "breached", "outlier"]);
-    return [fields.map(x => csvEscape(x)).join(",")].concat(
+    return [fields.map(x => csvEscape(x, true)).join(",")].concat(
       result.records.map(row => fields.map(name => csvEscape(row[name], result.input_columns.includes(name))).join(","))
     ).join("\r\n") + "\r\n";
   }
