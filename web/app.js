@@ -195,12 +195,14 @@
         table.appendChild(tr);
       }
       resultArea.hidden = false;
+      byId("placeholder").hidden = true;
       status("Analyzed " + o.count + " records locally. Target: " + data.threshold_minutes + " minutes.");
     }
 
     async function run() {
       result = null;
       resultArea.hidden = true;
+      byId("placeholder").hidden = false;
       const threshold = Number(thresholdInput.value);
       try {
         if (!Number.isFinite(threshold) || threshold <= 0 || thresholdInput.value.trim() === "") {
