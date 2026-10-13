@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
+from tat_metrics import analyze_csv
 
 supervisor = SystemSupervisor(model_provider="mock")
 
@@ -39,6 +40,21 @@ def metrics():
 def api_audit(payload: SystemTaskPayload):
     dossier = supervisor.process_task(payload)
     return dossier.to_dict()
+
+
+class TatRequest(BaseModel):
+    csv_text: str
+    threshold_minutes: float = 60.0
+
+
+@app.post("/api/tat/analyze")
+def api_tat_analyze(request: TatRequest):
+    """Aggregate turnaround metrics without returning specimen-level source rows."""
+    try:
+        result = analyze_csv(request.csv_text, request.threshold_minutes)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {key: result[key] for key in ("threshold_minutes", "overall", "by_test")}
 
 
 @app.post("/api/chat")
