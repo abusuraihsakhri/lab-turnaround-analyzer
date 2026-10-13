@@ -37,3 +37,8 @@ test("rejects invalid timestamps and schema", () => {
   assert.throws(() => parseCSV(prefix + '"unterminated'), /Unterminated/);
   assert.throws(() => analyzeCSV(EXAMPLE, 0), /positive/);
 });
+
+test("CSV header formulas are escaped too", () => {
+  const csv = "test,received_at,reported_at,=2+2\nCBC,2026-01-01T00:00:00Z,2026-01-01T00:20:00Z,ok";
+  assert.match(annotatedCSV(analyzeCSV(csv)).split("\r\n")[0], /"'=2\+2"/);
+});
