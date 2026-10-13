@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lab-turnaround-analyzer"
-version = "3.0.0"
+version = "3.1.0"
 description = "Lab Turnaround Time Analyzer - TAT percentiles, breach rates and outlier detection from lab LIS timestamps."
 readme = "README.md"
 license = {text = "MIT"}
