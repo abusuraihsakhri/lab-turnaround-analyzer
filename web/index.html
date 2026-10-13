@@ -1,236 +1,109 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lab Turnaround Analyzer — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Analyze laboratory turnaround times from LIS timestamp CSV data locally in your browser.">
+  <title>Lab Turnaround Analyzer</title>
+  <style>
+    :root { font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:#172339; background:#f3f6fa; }
+    * { box-sizing:border-box; }
+    body { margin:0; line-height:1.5; }
+    main { width:min(1120px,calc(100% - 2rem)); margin:2rem auto 4rem; }
+    header { display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:1rem; margin-bottom:1.8rem; }
+    h1 { margin:0; font-size:clamp(1.65rem,3vw,2.3rem); letter-spacing:-.035em; }
+    h2 { font-size:1.08rem; margin:0 0 .75rem; }
+    p { margin:.5rem 0; }
+    .muted { color:#536174; }
+    a { color:#1652aa; }
+    .pill { border:1px solid #bcdaca; background:#ecfdf3; color:#17613d; border-radius:100px; padding:.35rem .75rem; font-size:.85rem; font-weight:600; }
+    .layout { display:grid; grid-template-columns:minmax(270px,340px) minmax(0,1fr); align-items:start; gap:1.2rem; }
+    .panel { padding:1.4rem; background:#fff; border:1px solid #d7dfeb; border-radius:14px; box-shadow:0 4px 20px rgba(12,28,50,.035); }
+    label { display:block; font-size:.9rem; font-weight:650; margin:1.1rem 0 .35rem; }
+    input { width:100%; border:1px solid #a6b4c7; padding:.7rem .8rem; border-radius:7px; font:inherit; background:#fff; }
+    input[type=file] { font-size:.82rem; min-width:0; }
+    button { font:inherit; font-weight:600; padding:.68rem 1rem; border-radius:8px; border:1px solid #b6c7de; color:#184177; background:#fff; cursor:pointer; }
+    button.primary { background:#1756a9; color:#fff; border-color:#1756a9; }
+    button:hover { filter:brightness(.96); }
+    :focus-visible { outline:3px solid #f59e0b; outline-offset:3px; }
+    .actions { display:flex; gap:.6rem; flex-wrap:wrap; margin:1.1rem 0 0; }
+    .hint { color:#526277; font-size:.82rem; }
+    code { background:#edf2f8; border-radius:4px; padding:.12rem .26rem; font-size:.85em; }
+    .status { color:#1d6541; margin:1rem 0 0; font-size:.9rem; overflow-wrap:anywhere; }
+    .status.error { color:#ae2937; font-weight:600; }
+    .metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.7rem; margin-bottom:1.2rem; }
+    .metric { padding:.9rem; background:#f2f6fc; border-radius:9px; }
+    .metric .value { font-size:clamp(1.15rem,2.5vw,1.65rem); font-weight:750; font-variant-numeric:tabular-nums; }
+    .metric .caption { font-size:.74rem; color:#536174; font-weight:600; }
+    .table-scroll { width:100%; overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:.88rem; white-space:nowrap; }
+    th,td { padding:.7rem .7rem; text-align:right; border-bottom:1px solid #e1e7f0; font-variant-numeric:tabular-nums; }
+    th:first-child,td:first-child { text-align:left; }
+    thead { color:#536174; background:#f2f5f9; }
+    tbody th { font-weight:600; }
+    .empty { background:#f4f7fb; border:1px dashed #b8c8dc; border-radius:9px; padding:1.2rem; }
+    footer { color:#596679; font-size:.82rem; margin-top:1.6rem; border-top:1px solid #d7dfeb; padding-top:1rem; }
+    @media(max-width:800px){ .layout{grid-template-columns:1fr} .metrics{grid-template-columns:repeat(2,minmax(0,1fr))} main{margin-top:1rem} }
+    @media(max-width:430px){ .panel{padding:1rem} .actions button{width:100%} }
+  </style>
+  <script src="./app.js" defer></script>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Lab Turnaround Analyzer</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
+<main>
+  <header>
+    <div>
+      <h1>Lab Turnaround Analyzer</h1>
+      <p class="muted">LIS timestamp analytics · TAT distributions, target breaches, and outliers</p>
+      <a href="https://github.com/abusuraihsakhri/lab-turnaround-analyzer" rel="noopener noreferrer">Repository and documentation</a>
     </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
+    <span class="pill">Runs locally in your browser</span>
+  </header>
+  <div class="layout">
+    <section class="panel" aria-labelledby="upload-title">
+      <h2 id="upload-title">Analyze laboratory timestamps</h2>
+      <p class="hint">No upload to a server, external models, or browser storage. Avoid using identifiable clinical data on shared devices.</p>
+      <form id="form">
+        <label for="file">LIS CSV file</label>
+        <input id="file" type="file" accept=".csv,text/csv" aria-describedby="csv-hint">
+        <p id="csv-hint" class="hint">Columns: <code>test</code>, <code>received_at</code>, <code>reported_at</code>. Additional columns are retained in CSV export. Maximum 20,000 rows.</p>
+        <label for="threshold">TAT target (minutes)</label>
+        <input id="threshold" type="number" min="0.001" step="any" value="60" required>
+        <p class="hint">Timestamps must be ISO 8601 with a timezone: <code>2026-10-01T08:00:00Z</code>. Breach = TAT strictly greater than target.</p>
+        <div class="actions">
+          <button class="primary" type="submit">Analyze CSV</button>
+          <button type="button" id="example">Load example</button>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
+      </form>
+      <p class="status" id="message" role="status" aria-live="polite">Choose a CSV or load the synthetic example.</p>
+    </section>
 
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
+    <section class="panel" aria-label="Analysis results">
+      <div id="results" hidden>
+        <h2>Overall results</h2>
+        <div class="metrics" aria-label="Summary metrics">
+          <div class="metric"><div class="caption">Records</div><div class="value" id="n">—</div></div>
+          <div class="metric"><div class="caption">90th percentile</div><div class="value" id="p90">—</div></div>
+          <div class="metric"><div class="caption">Target breaches</div><div class="value" id="breach">—</div></div>
+          <div class="metric"><div class="caption">IQR outliers</div><div class="value" id="outlier">—</div></div>
         </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Lab Turnaround Analyzer Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
+        <h2>By test</h2>
+        <div class="table-scroll" tabindex="0" aria-label="Scrollable test statistics">
+          <table>
+            <thead><tr><th scope="col">Test</th><th scope="col">n</th><th scope="col">Mean</th><th scope="col">P50</th><th scope="col">P90</th><th scope="col">P95</th><th scope="col">Breaches</th><th scope="col">Breach %</th><th scope="col">Outliers</th></tr></thead>
+            <tbody id="by-test"></tbody>
+          </table>
         </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "lab-turnaround-analyzer",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <div class="actions">
+          <button type="button" id="csv-export">Export annotated CSV</button>
+          <button type="button" id="json-export">Export summary JSON</button>
+        </div>
+        <p class="hint">All TAT values are elapsed minutes. Percentiles use linear interpolation. Outliers are values above Q3 + 1.5 × IQR within each test (only when n ≥ 4). These are descriptive flags, not clinical urgency classifications.</p>
+      </div>
+      <div class="empty" id="placeholder">Select a dataset to display descriptive metrics and test-level breakdowns.</div>
+    </section>
+  </div>
+  <footer>Use only with authorized laboratory data. This is an operational quality-analysis tool, not a diagnostic or critical-value alerting system. Version 3.1.</footer>
+</main>
 </body>
 </html>
