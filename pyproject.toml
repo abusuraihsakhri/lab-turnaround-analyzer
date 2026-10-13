@@ -38,6 +38,9 @@ dev = [
 [project.scripts]
 lab-turnaround-analyzer = "cli:main"
 
+[tool.setuptools]
+py-modules = ["cli", "tat_analyzer", "tat_metrics", "enrichment", "simulator"]
+
 [tool.setuptools.packages.find]
 include = ["agents*"]
 
