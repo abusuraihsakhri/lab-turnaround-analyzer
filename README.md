@@ -1,187 +1,81 @@
 # Lab Turnaround Analyzer
 
-> **Domain:** Computational Biology & Clinical Laboratory Informatics
-> **Standards:** wwPDB, IUPAC, CLSI, CAP, NIST
+Laboratory turnaround-time (TAT) analysis from LIS CSV timestamps, with a standalone, browser-based dashboard and Python CLI/API. The browser version works entirely on-device, without a Python backend.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111%2B-009688.svg?logo=fastapi&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+## Features
 
----
+- Total and test-stratified TAT in elapsed minutes, with mean, P50, P90, P95 and maximum.
+- Target breach counts and rates (TAT strictly greater than a configurable target).
+- Upper IQR outlier flags per test (Q3 + 1.5 × IQR, applied only when at least four records exist).
+- Export of annotated CSV and aggregate JSON; input validation with clear row-level errors.
+- Existing lookup, agent audit, mock supervisory chat, simulation and enrichment interfaces remain available.
 
-## 📖 What It Does
+## Use in the browser
 
-Lab Turnaround Time Analyzer processes laboratory LIS timestamps to calculate:
-- TAT (Turnaround Time) percentiles
-- Breach rate analysis
-- Outlier detection and alerting
-- Reference range validation
-- Quality control monitoring
+Open the published GitHub Pages application when Pages deployment is enabled, or open `web/index.html` directly in a modern browser. Choose a CSV file, set the TAT target in minutes, and select **Analyze CSV**. **Load example** runs the synthetic dataset without uploading a file. Exports are generated locally.
 
-Features a multi-worker agent architecture with HMAC-SHA256 tamper-evident audit trails and zero-PHI outbound data protection.
+The browser requires no backend, account, network request, model provider, cookies or persistent browser storage. Data remain in the active page until the tab is closed or another dataset is analyzed. Downloaded files remain wherever you save them.
 
----
+## CSV input
 
-## ⚙️ Key Components
+Required columns are `test`, `received_at` and `reported_at`. An optional `specimen_id` or other columns are preserved in annotated CSV output. Each timestamp must include a timezone offset or `Z`. Example:
 
-### Core Modules
-
-| Module | Purpose |
-|--------|---------|
-| `tat_analyzer.py` | Core lookup engine and CSV processor |
-| `cli.py` | Command-line interface for all operations |
-| `simulator.py` | High-throughput simulation and stress testing |
-| `enrichment.py` | Domain-specific analytical feature engines |
-
-### Agent System (`agents/`)
-
-| Module | Purpose |
-|--------|---------|
-| `base.py` | PHI guard, HMAC-SHA256 audit trail, security exceptions |
-| `models.py` | Pydantic data models for tasks, alerts, and dossiers |
-| `supervisor.py` | Multi-worker orchestration and consensus |
-| `workers.py` | Specialized QC, safety, and conformance workers |
-| `api.py` | FastAPI REST endpoints |
-| `llm_factory.py` | LLM provider abstraction (mock, Ollama, Claude, OpenAI) |
-| `learning.py` | Bayesian calibration and active learning |
-| `metrics.py` | Prometheus metrics exporter |
-| `streamer.py` | WebSocket telemetry broadcasting |
-
----
-
-## 💻 Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/lab-turnaround-analyzer.git
-cd lab-turnaround-analyzer
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# or: .venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -e ".[dev]"
+```csv
+test,received_at,reported_at,specimen_id
+CBC,2026-10-01T08:00:00Z,2026-10-01T08:30:00Z,S-001
+CBC,2026-10-01T08:00:00Z,2026-10-01T09:15:00Z,S-002
+CRP,2026-10-01T10:00:00+02:00,2026-10-01T09:20:00Z,S-003
 ```
 
----
+TAT is calculated as reported time minus received time after time-zone normalization. Negative durations, malformed timestamps, missing fields, empty datasets and invalid targets are rejected; rows are not silently dropped. Both implementations limit analyses to 20,000 records and 2,000,000 characters of CSV. Percentiles use linear interpolation at position `(n-1) × p`. Metrics are descriptive quality indicators, **not** clinical urgency classifications or patient-care decisions.
 
-## 🚀 Usage
+## Python CLI
 
-### CLI Commands
+Requires Python 3.10 or later.
 
 ```bash
-# Run single task evaluation
-python cli.py audit --task-id TASK-001 --primary 28.5 --secondary 14.2
-
-# Batch process CSV records
-python cli.py batch -i input.csv -o results.csv
-
-# Chat with supervisor
-python cli.py chat "Explain current system status"
-
-# Verify audit trail integrity
-python cli.py verify-audit
-
-# Launch FastAPI server
-python cli.py serve --host 127.0.0.1 --port 8000
+python -m pip install -e ".[dev]"
+python tat_analyzer.py analyze --input lis.csv --threshold-minutes 60 \
+  --output tat-annotated.csv --report tat-summary.json
+# Equivalent installed CLI:
+lab-turnaround-analyzer analyze-tat --input lis.csv --threshold-minutes 60
 ```
 
-### Direct Analyzer Usage
+The CSV and JSON outputs are optional. Without them, the summary is printed to standard output.
+
+The legacy lookup commands are preserved:
 
 ```bash
-# Single lookup
 python tat_analyzer.py single creatinine
-
-# Batch CSV processing
-python tat_analyzer.py batch --input sample.csv --output results.csv
+python tat_analyzer.py batch --input sample.csv --output lookup-output.csv
+lab-turnaround-analyzer audit --task-id TASK-001
+lab-turnaround-analyzer verify-audit
 ```
 
-### Run Simulation
+## Optional FastAPI service
 
 ```bash
-# Default 100 iterations
-python simulator.py
-
-# Custom iteration count
-python simulator.py 1000
+lab-turnaround-analyzer serve --host 127.0.0.1 --port 8000
 ```
 
----
+`POST /api/tat/analyze` accepts JSON with `csv_text` and `threshold_minutes`, returning aggregate TAT statistics without raw records. Legacy `/api/audit`, `/api/chat`, `/api/audit/logs`, `/metrics` and `/health` routes are retained. The legacy agent thresholds are generic and must not be mistaken for TAT clinical limits.
 
-## 🧪 Testing
+## Security and privacy
+
+The browser performs local CSV processing and makes no automatic data submissions. CSV exports neutralize leading spreadsheet formulas in user-provided fields. The Python/API service processes data server-side and is **not** an authenticated, HIPAA-compliant clinical information system. Use de-identified or appropriately authorized data and secure network controls for deployments. PHI pattern screening in the legacy agent interface is best-effort, not comprehensive de-identification. The HMAC audit chain is in-memory and does not provide durable, independently witnessed audit storage.
+
+## Development and verification
 
 ```bash
-# Run all tests
-pytest -v
-
-# Run with coverage
-pytest -v --cov=agents --cov=tat_analyzer
+python -m pip install -e ".[dev]"
+python -m pytest -q
+node --check web/app.js
+node --test web/app.test.js
+python -m compileall -q agents cli.py tat_analyzer.py tat_metrics.py enrichment.py simulator.py
 ```
 
----
+CI tests Python 3.10–3.13 and Node.js 22. GitHub Pages deploys only the static `web/index.html` and `web/app.js` assets from `master` when Pages is enabled and the deployment workflow succeeds. No Pyodide is required because the browser implementation is plain JavaScript.
 
-## 🐳 Docker Deployment
+## Technology and license
 
-```bash
-# Build and run with Docker Compose
-docker-compose up --build
-
-# Or manually
-docker build -t lab-turnaround-analyzer .
-docker run -p 8000:8000 -e AUDIT_SECRET_KEY=your-secret-key lab-turnaround-analyzer
-```
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AUDIT_SECRET_KEY` | HMAC-SHA256 signing key for audit trail | Random per-session |
-| `MODEL_PROVIDER` | LLM provider (mock/ollama/claude/openai) | mock |
-
-See `.env.example` for full configuration options.
-
----
-
-## 🛡️ Security Features
-
-- **Zero-PHI Outbound Guard:** AST and regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers
-- **HMAC-SHA256 Audit Trail:** Cryptographically chained, tamper-evident logging
-- **Path Traversal Protection:** Input/output file path validation
-- **No Hardcoded Secrets:** All secrets via environment variables
-
----
-
-## 📁 Project Structure
-
-```
-lab-turnaround-analyzer/
-├── agents/                 # Multi-agent system
-│   ├── api.py             # FastAPI REST server
-│   ├── base.py            # Security, PHI guard, audit trail
-│   ├── models.py          # Pydantic data models
-│   ├── supervisor.py      # Orchestration and consensus
-│   ├── workers.py         # Specialized worker agents
-│   ├── llm_factory.py     # LLM provider abstraction
-│   ├── learning.py        # Bayesian calibration
-│   ├── metrics.py         # Prometheus metrics
-│   └── streamer.py        # WebSocket telemetry
-├── tests/                 # Test suite
-├── web/                   # Web console (HTML)
-├── cli.py                 # CLI entry point
-├── tat_analyzer.py        # Core analyzer
-├── simulator.py           # Simulation runner
-├── enrichment.py          # Feature engines
-├── pyproject.toml         # Project configuration
-├── Dockerfile             # Container build
-├── docker-compose.yml     # Container orchestration
-└── openapi_spec.json      # OpenAPI specification
-```
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
+Python standard library, FastAPI/Pydantic for the optional service, and dependency-free browser JavaScript. Tested by CI on the specified runtimes; modern Chrome, Firefox, Safari and Edge are intended browser targets. MIT license; see [LICENSE](LICENSE).
