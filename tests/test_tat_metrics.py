@@ -55,3 +55,10 @@ def test_export_neutralizes_formula():
     output = annotated_csv(analyze_csv(text))
     assert "'=HYPERLINK" in output
     assert "tat_minutes,breached,outlier" in output
+
+
+def test_export_neutralizes_formula_in_column_header():
+    text = ("test,received_at,reported_at,=2+2\n"
+            "CBC,2026-01-01T00:00:00Z,2026-01-01T00:20:00Z,ok\n")
+    output = annotated_csv(analyze_csv(text))
+    assert "'=2+2" in output.splitlines()[0]
