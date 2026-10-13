@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lab-turnaround-analyzer"
-version = "3.0.0"
+version = "3.1.0"
 description = "Lab Turnaround Time Analyzer - TAT percentiles, breach rates and outlier detection from lab LIS timestamps."
 readme = "README.md"
 license = {text = "MIT"}
@@ -33,10 +33,14 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
 lab-turnaround-analyzer = "cli:main"
+
+[tool.setuptools]
+py-modules = ["cli", "tat_analyzer", "tat_metrics", "enrichment", "simulator"]
 
 [tool.setuptools.packages.find]
 include = ["agents*"]

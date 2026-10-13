@@ -34,6 +34,13 @@ def main(argv=None):
     p_batch.add_argument("-i", "--input", required=True)
     p_batch.add_argument("-o", "--output", default="results.csv")
 
+    # Timestamp-based TAT analysis
+    p_tat = subparsers.add_parser("analyze-tat", help="Calculate TAT metrics from LIS timestamps")
+    p_tat.add_argument("-i", "--input", required=True)
+    p_tat.add_argument("--threshold-minutes", type=float, default=60)
+    p_tat.add_argument("-o", "--output", help="Optional annotated CSV path")
+    p_tat.add_argument("--report", help="Optional JSON summary path")
+
     # Verify Audit
     subparsers.add_parser("verify-audit", help="Verify HMAC audit trail integrity")
 
@@ -43,6 +50,15 @@ def main(argv=None):
     p_serve.add_argument("--port", type=int, default=8000)
 
     args = parser.parse_args(argv)
+
+    if args.command == "analyze-tat":
+        from tat_analyzer import main as analyzer_main
+        options = ["analyze", "--input", args.input, "--threshold-minutes", str(args.threshold_minutes)]
+        if args.output:
+            options.extend(["--output", args.output])
+        if args.report:
+            options.extend(["--report", args.report])
+        return analyzer_main(options)
 
     if args.command == "audit":
         payload = SystemTaskPayload(
@@ -94,7 +110,7 @@ def main(argv=None):
                 primary_metric=float(r.get("primary_metric", 15.0)),
                 secondary_metric=float(r.get("secondary_metric", 5.0)),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=str(r.get("is_critical_flag", "false")).strip().lower() in ("true", "1", "yes", "y"),
             )
             dossier = supervisor.process_task(payload)
             row_dict = dict(r)

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Lab Turnaround Analyzer API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
+    "description": "Laboratory TAT aggregation API with retained legacy agent routes",
+    "version": "3.1.0",
     "contact": {
       "name": "Dr. Abu Suraih Sakhri",
       "url": "https://github.com/abusuraihsakhri"
@@ -25,7 +25,7 @@
         "summary": "Prometheus operational metrics",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "JSON operational counters and status"
           }
         }
       }
@@ -107,6 +107,44 @@
         "responses": {
           "200": {
             "description": "Cryptographic audit trail"
+          }
+        }
+      }
+    },
+    "/api/tat/analyze": {
+      "post": {
+        "summary": "Calculate timezone-aware TAT summary statistics",
+        "description": "Accept CSV data and return aggregated metrics. Does not echo raw specimen-level rows.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csv_text": {
+                    "type": "string",
+                    "description": "CSV with test, received_at, reported_at"
+                  },
+                  "threshold_minutes": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "default": 60
+                  }
+                },
+                "required": [
+                  "csv_text"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Overall and test-stratified descriptive statistics"
+          },
+          "422": {
+            "description": "Invalid CSV schema, timestamps or threshold"
           }
         }
       }

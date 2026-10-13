@@ -7,13 +7,14 @@ from pydantic import BaseModel
 from .base import AuditLogger, PHIGuard
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
+from tat_metrics import analyze_csv
 
 supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Lab Turnaround Analyzer API",
-    description="Enterprise Distributed Component Platform (AI Drug Discovery, Structural Biology & Wet-Lab Robotics)",
-    version="3.0.0-ENTERPRISE",
+    description="Laboratory turnaround metrics and preserved legacy agent evaluation API",
+    version="3.1.0",
 )
 
 
@@ -23,7 +24,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "lab-turnaround-analyzer", "domain": "AI Drug Discovery, Structural Biology & Wet-Lab Robotics", "standard": "wwPDB / IUPAC / OpenSMILES / ISAC Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "lab-turnaround-analyzer", "domain": "Laboratory informatics", "standard": "Descriptive laboratory operations metrics", "version": "3.1.0"}
 
 
 @app.get("/metrics")
@@ -39,6 +40,21 @@ def metrics():
 def api_audit(payload: SystemTaskPayload):
     dossier = supervisor.process_task(payload)
     return dossier.to_dict()
+
+
+class TatRequest(BaseModel):
+    csv_text: str
+    threshold_minutes: float = 60.0
+
+
+@app.post("/api/tat/analyze")
+def api_tat_analyze(request: TatRequest):
+    """Aggregate turnaround metrics without returning specimen-level source rows."""
+    try:
+        result = analyze_csv(request.csv_text, request.threshold_minutes)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return {key: result[key] for key in ("threshold_minutes", "overall", "by_test")}
 
 
 @app.post("/api/chat")
